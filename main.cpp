@@ -12,40 +12,29 @@ int main() {
     std::string client_id;
     std::string client_secret;
 
-    const char* client_id_c = std::getenv("DERIBIT_CLIENT_ID");
-    const char* client_secret_c = std::getenv("DERIBIT_CLIENT_SECRET");
-
-    if (client_id_c && client_secret_c) {
-        client_id = client_id_c;
-        client_secret = client_secret_c;
-        std::cout << "Using credentials from environment variables." << std::endl;
-    } else {
-        // Try to read credentials from config.json
-        std::ifstream config_file("config.json");
-        if (config_file) {
-            nlohmann::json config;
-            try {
-                config_file >> config;
-                if (config.contains("client_id") && config.contains("client_secret")) {
+    std::ifstream config_file("config.json");
+    if (config_file) {
+        nlohmann::json config;
+        try {
+            config_file >> config;
+            if (config.contains("client_id") && config.contains("client_secret")) {
                     client_id = config["client_id"];
                     client_secret = config["client_secret"];
                     std::cout << "Using credentials from config.json." << std::endl;
-                } else {
+            } else {
                     std::cerr << "config.json must contain client_id and client_secret." << std::endl;
                     return 1;
-                }
-            } catch (const nlohmann::json::parse_error& e) {
-                std::cerr << "JSON parsing error: " << e.what() << std::endl;
-                return 1;
             }
-        } else {
-            std::cerr << "Failed to open config.json." << std::endl;
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "JSON parsing error: " << e.what() << std::endl;
             return 1;
         }
+    }else {
+        std::cerr << "Failed to open config.json." << std::endl;
+        return 1;
     }
-
+    
     DeribitClient client(client_id, client_secret);
-
     if (!client.authenticate()) {
         return -1;
     }
